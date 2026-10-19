@@ -735,7 +735,7 @@
   <!-- FIREBASE ENGINE -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getFirestore, collection, onSnapshot, doc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { getFirestore, collection, onSnapshot, doc, setDoc, deleteDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
     let db = null;
 
@@ -1098,7 +1098,7 @@
               <div><span class="block text-slate-400">Editorial</span><span class="font-bold text-slate-700">${book.editorial}</span></div>
               <div><span class="block text-slate-400">Año Publicación</span><span class="font-bold text-slate-700">${book.año || 'N/A'}</span></div>
               <div><span class="block text-slate-400">ISBN</span><span class="font-bold text-slate-700">${book.isbn || 'N/A'}</span></div>
-              <div><span class="block text-slate-400">Disponibilidad</span><span class="font-bold ${isDisp ? 'text-emerald-600' : 'text-red-600'}">${isDisp ? `${book.copias} ejemplares` : 'Agotado'}</span></div>
+              <div><span class="block text-slate-400">Disponibilidad / Stock</span><span class="font-bold ${isDisp ? 'text-emerald-600' : 'text-red-600'}">${isDisp ? `${book.copias} ejemplares` : 'Agotado'}</span></div>
             </div>
 
             <div>
@@ -1294,7 +1294,7 @@
             return;
           }
 
-          const parsed = rows.map(r => {
+          const rawParsed = rows.map(r => {
             const getV = (keys) => {
               const kList = Object.keys(r);
               for (const k of keys) {
@@ -1307,22 +1307,39 @@
             const copias = parseInt(getV(['copias', 'stock', 'cantidad']) || 1);
 
             return {
-              titulo: getV(['titulo', 'libro', 'nombre']) || 'Sin Título',
-              autor: getV(['autor', 'escritor']) || 'Autor Desconocido',
-              editorial: getV(['editorial']) || 'CUNDECH',
-              genero: getV(['genero', 'género', 'categoria']) || 'General',
+              titulo: (getV(['titulo', 'libro', 'nombre']) || 'Sin Título').toString().trim(),
+              autor: (getV(['autor', 'escritor']) || 'Autor Desconocido').toString().trim(),
+              editorial: (getV(['editorial']) || 'CUNDECH').toString().trim(),
+              genero: (getV(['genero', 'género', 'categoria']) || 'General').toString().trim(),
               año: parseInt(getV(['año', 'ano', 'year'])) || 2024,
               isbn: String(getV(['isbn', 'codigo']) || ''),
               copias: copias,
-              disponible: copias > 0,
-              keywords: getV(['keywords', 'palabras clave']) || '',
-              descripcion: getV(['descripcion', 'resumen']) || 'Sin descripción.',
-              portada: getV(['portada', 'imagen', 'url']) || ''
+              keywords: (getV(['keywords', 'palabras clave']) || '').toString().trim(),
+              descripcion: (getV(['descripcion', 'resumen']) || 'Sin descripción.').toString().trim(),
+              portada: (getV(['portada', 'imagen', 'url']) || '').toString().trim()
             };
           });
 
-          window.appState.excelImportData = parsed;
-          document.getElementById('excel-row-count').textContent = parsed.length;
+          // Consolidar libros duplicados por exactamente el mismo nombre (Título)
+          const groupedMap = new Map();
+
+          rawParsed.forEach(item => {
+            const key = item.titulo;
+            if (groupedMap.has(key)) {
+              const existing = groupedMap.get(key);
+              existing.copias += item.copias;
+            } else {
+              groupedMap.set(key, { ...item });
+            }
+          });
+
+          const consolidated = Array.from(groupedMap.values()).map(item => ({
+            ...item,
+            disponible: item.copias > 0
+          }));
+
+          window.appState.excelImportData = consolidated;
+          document.getElementById('excel-row-count').textContent = consolidated.length;
           document.getElementById('excel-preview-area').classList.remove('hidden');
         } catch(err) {
           showToast("Error al leer archivo Excel", "error");
@@ -1340,9 +1357,24 @@
     async function confirmExcelImport() {
       const data = window.appState.excelImportData;
       for (const item of data) {
-        await window.syncBook(item);
+        // Verificar si ya existe en appState un libro con el mismo título para sumar el stock
+        const existingBook = window.appState.books.find(
+          b => b.titulo.trim().toLowerCase() === item.titulo.trim().toLowerCase()
+        );
+
+        if (existingBook) {
+          const updatedCopias = existingBook.copias + item.copias;
+          const updatedData = {
+            ...existingBook,
+            copias: updatedCopias,
+            disponible: updatedCopias > 0
+          };
+          await window.syncBook(updatedData, existingBook.id);
+        } else {
+          await window.syncBook(item);
+        }
       }
-      showToast(`${data.length} libros importados desde Excel`, "success");
+      showToast(`${data.length} libros únicos importados desde Excel (Stock actualizado)`, "success");
       cancelExcelPreview();
     }
 
