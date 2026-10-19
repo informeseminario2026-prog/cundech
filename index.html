@@ -1,0 +1,1501 @@
+<!DOCTYPE html>
+<html lang="es" class="h-full bg-slate-50">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Biblioteca CUNDECH - Catálogo Digital</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Merriweather:ital,wght@0,400;0,700;1,300&display=swap" rel="stylesheet">
+  <!-- SheetJS (XLSX) for Excel Import -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            serif: ['Merriweather', 'serif'],
+          },
+          colors: {
+            cundech: {
+              DEFAULT: '#1b4258',
+              50: '#f0f6fa',
+              100: '#dce8f0',
+              200: '#bc357e',
+              500: '#2b6585',
+              600: '#1b4258',
+              700: '#143345',
+              800: '#0e2330',
+              900: '#08141c',
+            },
+            accent: {
+              gold: '#d97706',
+              teal: '#0d9488'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 4px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    .card-hover { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+    .card-hover:hover { transform: translateY(-3px); box-shadow: 0 12px 24px -10px rgba(27, 66, 88, 0.2); }
+    .modal-backdrop { backdrop-filter: blur(6px); }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col antialiased selection:bg-cundech-100 selection:text-cundech-900">
+
+  <!-- ================= HEADER / NAVBAR ================= -->
+  <header class="sticky top-0 z-30 bg-cundech-600 text-white shadow-md border-b border-cundech-700">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between min-h-[5rem] py-3 sm:py-0">
+        
+        <!-- Logo Brand Header -->
+        <div class="flex items-center space-x-2.5 sm:space-x-3 select-none" title="Biblioteca CUNDECH">
+          <div class="flex items-center space-x-1.5 sm:space-x-2 bg-white/10 p-1 sm:p-1.5 rounded-xl sm:rounded-2xl border border-white/20">
+            <!-- USAC Logo Placeholder or User Uploaded SVG/Img -->
+            <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-white flex items-center justify-center p-1 overflow-hidden shadow-inner">
+              <img src="./Usac_logo.png" alt="">
+            </div>
+            <!-- CUNDECH Shield Logo -->
+            <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-cundech-800 flex items-center justify-center p-1 text-amber-400 font-bold border border-amber-400/40">
+              <img src="./logoo2.png" alt="">
+            </div>
+          </div>
+          <div>
+            <span class="font-serif text-base sm:text-2xl font-bold tracking-tight text-white block leading-tight sm:leading-none">BIBLIOTECA CUNDECH</span>
+            <span class="text-[9px] sm:text-[11px] text-cundech-100 font-medium tracking-widest uppercase block mt-0.5 sm:mt-1 opacity-90 leading-tight">Centro Universitario del Chimaltenango</span>
+          </div>
+        </div>
+
+        <!-- Navigation Status / Options -->
+        <div class="flex items-center space-x-1.5 sm:space-x-3">
+          
+          <!-- Database Connection Badge (Only displayed when logged in as admin) -->
+          <div id="db-status-badge" class="hidden flex items-center space-x-1.5 px-2 sm:px-3 py-1 bg-slate-800/80 border border-slate-700 rounded-xl text-xs font-medium cursor-pointer" onclick="openDbModal()" title="Estado de la base de datos">
+            <span id="db-status-dot" class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+            <span id="db-status-text" class="text-slate-300 hidden sm:inline">Conectando...</span>
+          </div>
+
+          <!-- Admin Session Action (Only displayed when logged in as admin) -->
+          <div id="admin-session-nav" class="hidden flex items-center space-x-1 sm:space-x-2">
+            <span class="hidden md:inline-block px-2.5 py-1 bg-amber-500/20 text-amber-300 border border-amber-500/40 rounded-lg text-xs font-bold uppercase tracking-wider">
+              <i class="fa-solid fa-user-shield mr-1"></i> Admin
+            </span>
+            <button onclick="navigateTo('admin')" class="px-2 sm:px-3 py-1.5 rounded-xl text-[11px] sm:text-xs font-bold bg-white text-cundech-800 hover:bg-slate-100 transition shadow whitespace-nowrap">
+              Panel Control
+            </button>
+            <button onclick="logoutAdmin()" class="p-1.5 sm:p-2 rounded-xl text-red-300 hover:text-white hover:bg-red-900/40 transition text-xs sm:text-base" title="Cerrar Sesión">
+              <i class="fa-solid fa-right-from-bracket"></i>
+            </button>
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+  </header>
+
+  <!-- ================= 1. PUBLIC USER VIEW ================= -->
+  <div id="view-client" class="flex-1 flex flex-col">
+    <!-- Hero Banner & Dynamic Search -->
+    <section class="bg-gradient-to-b from-cundech-600 via-cundech-700 to-cundech-800 text-white py-10 px-4 sm:px-6 lg:px-8 border-b border-cundech-900 shadow-inner">
+      <div class="max-w-4xl mx-auto text-center">
+        <h1 class="font-serif text-2xl sm:text-4xl font-bold text-white mb-2 tracking-wide">
+          Consulta de Catálogo Bibliográfico
+        </h1>
+        <p class="text-cundech-100 text-xs sm:text-sm max-w-2xl mx-auto mb-6 font-light leading-relaxed">
+          Explora la colección académica y literaria de CUNDECH. Encuentra libros por autor, editorial, palabras clave o filtra por género.
+        </p>
+
+        <!-- Search Box -->
+        <div class="relative max-w-2xl mx-auto">
+          <div class="relative flex items-center">
+            <i class="fa-solid fa-magnifying-glass absolute left-4 text-cundech-200 text-base"></i>
+            <input 
+              type="text" 
+              id="search-input" 
+              oninput="handleSearch()"
+              placeholder="Buscar por título, autor, editorial, ISBN o palabras clave..." 
+              class="w-full pl-11 pr-10 py-3 bg-cundech-900/80 border border-cundech-500/50 rounded-2xl text-sm text-white placeholder-cundech-200 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent shadow-xl backdrop-blur-md transition-all"
+            >
+            <button id="clear-search" onclick="clearSearch()" class="hidden absolute right-3 text-cundech-200 hover:text-white p-2">
+              <i class="fa-solid fa-xmark text-base"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Main Catalog View -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full flex-1">
+      
+      <!-- Filters and Bar -->
+      <div class="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-sm mb-8 space-y-4">
+        
+        <!-- Filter Row 1: Genres Tabs -->
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wider text-cundech-600 mb-2">Filtrar por Género Literario / Académico:</label>
+          <div id="genre-tabs" class="flex items-center space-x-2 overflow-x-auto custom-scrollbar pb-1">
+            <!-- Dynamic genre pills loaded via JS -->
+          </div>
+        </div>
+
+        <div class="border-t border-slate-100 pt-3 flex flex-wrap items-center justify-between gap-3">
+          <div class="flex flex-wrap items-center gap-3 w-full sm:w-auto">
+            <!-- Editorial Filter -->
+            <select id="editorial-select" onchange="applyFilters()" class="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-cundech-500">
+              <option value="Todas">Todas las Editoriales</option>
+            </select>
+
+            <button id="reset-filters-btn" onclick="resetFilters()" class="hidden text-xs text-amber-700 hover:text-amber-800 font-bold flex items-center space-x-1 underline">
+              <i class="fa-solid fa-rotate-left text-[10px]"></i>
+              <span>Limpiar filtros</span>
+            </button>
+          </div>
+
+          <!-- Sorting -->
+          <div class="flex items-center space-x-2 ml-auto">
+            <span class="text-xs text-slate-500 font-medium whitespace-nowrap">Ordenar:</span>
+            <select id="sort-select" onchange="applyFilters()" class="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-cundech-500">
+              <option value="titulo">Título (A-Z)</option>
+              <option value="autor">Autor (A-Z)</option>
+              <option value="año-desc">Año (Más Reciente)</option>
+              <option value="año-asc">Año (Más Antiguo)</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Results Heading -->
+      <div class="flex items-center justify-between mb-6">
+        <h2 id="section-title" class="font-serif text-xl font-bold text-cundech-800">
+          Libros Registrados
+        </h2>
+        <span id="results-count" class="text-xs sm:text-sm text-slate-500 font-semibold bg-slate-200 px-2.5 py-1 rounded-lg">0 libros</span>
+      </div>
+
+      <!-- Books Cards Grid -->
+      <div id="books-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <!-- Rendered dynamically -->
+      </div>
+
+      <!-- Empty State -->
+      <div id="empty-state" class="hidden text-center py-16 bg-white rounded-3xl border border-dashed border-slate-300 my-6">
+        <div class="w-16 h-16 bg-cundech-50 text-cundech-600 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">
+          <i class="fa-solid fa-book-open"></i>
+        </div>
+        <h3 class="font-serif text-xl font-bold text-slate-800 mb-1">No se encontraron libros</h3>
+        <p class="text-slate-500 text-xs sm:text-sm max-w-sm mx-auto mb-6">Prueba cambiando los filtros de género, la editorial o los términos de búsqueda.</p>
+        <button onclick="resetFilters()" class="px-5 py-2.5 bg-cundech-600 hover:bg-cundech-700 text-white font-semibold text-xs rounded-xl transition">
+          Restablecer Filtros
+        </button>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- Public Book Detail Modal -->
+  <div id="book-modal" class="hidden fixed inset-0 z-50 overflow-y-auto modal-backdrop bg-slate-950/60 flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-2xl w-full shadow-2xl border border-slate-200 overflow-hidden relative my-8">
+      <button onclick="closeModal('book-modal')" class="absolute top-4 right-4 z-10 w-9 h-9 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-full flex items-center justify-center transition">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+      <div id="modal-content" class="p-6 sm:p-8">
+        <!-- Rendered dynamically -->
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= 2. SECRET ADMIN LOGIN MODAL ================= -->
+  <div id="modal-admin-login" class="hidden fixed inset-0 z-50 overflow-y-auto modal-backdrop bg-slate-950/80 flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-md w-full shadow-2xl border border-slate-200 overflow-hidden relative my-8">
+      <div class="bg-cundech-600 p-6 text-center text-white relative">
+        <button onclick="closeModal('modal-admin-login')" class="absolute top-4 right-4 text-white/70 hover:text-white">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+        <div class="w-14 h-14 bg-cundech-800 text-amber-400 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-lg border border-amber-400/30 text-2xl font-bold">
+          <i class="fa-solid fa-user-shield"></i>
+        </div>
+        <h3 class="font-serif text-xl font-bold">Acceso de Administración</h3>
+        <p class="text-cundech-100 text-xs mt-1">Biblioteca CUNDECH</p>
+      </div>
+
+      <form onsubmit="handleAdminLogin(event)" class="p-6 space-y-4">
+        <div>
+          <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Usuario *</label>
+          <div class="relative">
+            <i class="fa-solid fa-user absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+            <input type="text" id="login-username" required placeholder="Ingresa tu usuario..." class="w-full pl-9 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-cundech-500">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Contraseña *</label>
+          <div class="relative">
+            <i class="fa-solid fa-key absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+            <input type="password" id="login-password" required placeholder="••••••••" class="w-full pl-9 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-cundech-500">
+          </div>
+        </div>
+
+        <div class="p-3 bg-amber-50 border border-amber-200 rounded-xl text-[11px] text-amber-800">
+          <p class="font-bold flex items-center gap-1">
+            <i class="fa-solid fa-circle-info"></i> Usuario por defecto:
+          </p>
+          <p class="mt-0.5">Usuario: <code class="bg-amber-100 px-1 rounded font-mono">admin</code> | Clave: <code class="bg-amber-100 px-1 rounded font-mono">admin123</code></p>
+        </div>
+
+        <button type="submit" class="w-full py-3 bg-cundech-600 hover:bg-cundech-700 text-white font-bold rounded-xl text-sm shadow-md transition flex items-center justify-center gap-2">
+          <i class="fa-solid fa-right-to-bracket"></i>
+          <span>Ingresar al Panel</span>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ================= 3. PRIVATE ADMIN PANEL VIEW ================= -->
+  <div id="view-admin" class="hidden flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+    
+    <!-- Admin Header Banner -->
+    <div class="mb-6 sm:mb-8 bg-cundech-600 text-white rounded-2xl sm:rounded-3xl p-5 sm:p-8 shadow-xl relative overflow-hidden border border-cundech-700">
+      <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4 sm:gap-6">
+        <div>
+          <div class="flex items-center space-x-2 text-amber-300 font-semibold text-xs uppercase tracking-widest mb-1">
+            <i class="fa-solid fa-shield-halved text-xs"></i>
+            <span>Panel de Control Privado</span>
+          </div>
+          <h1 class="font-serif text-xl sm:text-2xl md:text-3xl font-bold">Gestión de Biblioteca y Usuarios CUNDECH</h1>
+          <p class="text-cundech-100 text-xs sm:text-sm mt-1 max-w-xl">Administración de libros, gráficos estadísticos, importaciones masivas y cuentas de administradores.</p>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2 sm:gap-3 pt-2 md:pt-0 border-t border-cundech-500/30 md:border-t-0">
+          <button onclick="openDbModal()" class="flex-1 sm:flex-none px-3 py-2 sm:px-3.5 sm:py-2.5 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 rounded-xl text-xs sm:text-sm font-semibold transition flex items-center justify-center gap-1.5 sm:gap-2 border border-amber-500/40" title="Configurar Firebase Firestore">
+            <i class="fa-solid fa-database text-xs sm:text-sm"></i>
+            <span>Base de Datos</span>
+          </button>
+          <button onclick="navigateTo('client')" class="flex-1 sm:flex-none px-3 py-2 sm:px-4 sm:py-2.5 bg-cundech-800 hover:bg-cundech-900 text-white rounded-xl text-xs sm:text-sm font-semibold transition flex items-center justify-center gap-1.5 sm:gap-2 border border-cundech-500/30">
+            <i class="fa-solid fa-eye text-xs sm:text-sm"></i>
+            <span>Ver Catálogo</span>
+          </button>
+          <button onclick="logoutAdmin()" class="px-3 py-2 sm:px-4 sm:py-2.5 bg-red-900/80 hover:bg-red-800 text-white rounded-xl text-xs sm:text-sm font-semibold transition flex items-center justify-center gap-1.5 sm:gap-2">
+            <i class="fa-solid fa-right-from-bracket text-xs sm:text-sm"></i>
+            <span class="hidden xs:inline">Salir</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Dashboards & Analytics Cards -->
+    <section class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
+      <div class="bg-white p-3.5 sm:p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col xs:flex-row items-start xs:items-center space-y-2 xs:space-y-0 xs:space-x-3 sm:space-x-4">
+        <div class="w-10 h-10 sm:w-12 sm:h-12 bg-cundech-50 text-cundech-600 rounded-xl flex items-center justify-center text-lg sm:text-xl flex-shrink-0">
+          <i class="fa-solid fa-book"></i>
+        </div>
+        <div>
+          <span id="dash-total-books" class="block font-bold text-lg sm:text-xl text-slate-900">0</span>
+          <span class="text-[11px] sm:text-xs text-slate-500 font-medium">Libros Totales</span>
+        </div>
+      </div>
+
+      <div class="bg-white p-3.5 sm:p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col xs:flex-row items-start xs:items-center space-y-2 xs:space-y-0 xs:space-x-3 sm:space-x-4">
+        <div class="w-10 h-10 sm:w-12 sm:h-12 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center text-lg sm:text-xl flex-shrink-0">
+          <i class="fa-solid fa-box-archive"></i>
+        </div>
+        <div>
+          <span id="dash-available-books" class="block font-bold text-lg sm:text-xl text-emerald-600">0</span>
+          <span class="text-[11px] sm:text-xs text-slate-500 font-medium">Libros Disponibles</span>
+        </div>
+      </div>
+
+      <div class="bg-white p-3.5 sm:p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col xs:flex-row items-start xs:items-center space-y-2 xs:space-y-0 xs:space-x-3 sm:space-x-4">
+        <div class="w-10 h-10 sm:w-12 sm:h-12 bg-amber-50 text-amber-600 rounded-xl flex items-center justify-center text-lg sm:text-xl flex-shrink-0">
+          <i class="fa-solid fa-tags"></i>
+        </div>
+        <div>
+          <span id="dash-total-genres" class="block font-bold text-lg sm:text-xl text-amber-700">0</span>
+          <span class="text-[11px] sm:text-xs text-slate-500 font-medium">Géneros</span>
+        </div>
+      </div>
+
+      <div class="bg-white p-3.5 sm:p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col xs:flex-row items-start xs:items-center space-y-2 xs:space-y-0 xs:space-x-3 sm:space-x-4">
+        <div class="w-10 h-10 sm:w-12 sm:h-12 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center text-lg sm:text-xl flex-shrink-0">
+          <i class="fa-solid fa-users-gear"></i>
+        </div>
+        <div>
+          <span id="dash-total-users" class="block font-bold text-lg sm:text-xl text-blue-600">0</span>
+          <span class="text-[11px] sm:text-xs text-slate-500 font-medium">Administradores</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Admin Tabs Control -->
+    <div class="flex border-b border-slate-200 mb-6 font-bold text-xs sm:text-sm overflow-x-auto custom-scrollbar">
+      <button id="admin-tab-btn-books" onclick="switchAdminTab('books')" class="py-3 px-4 sm:px-6 text-cundech-600 border-b-2 border-cundech-600 flex items-center gap-2 whitespace-nowrap">
+        <i class="fa-solid fa-book-medical"></i>
+        <span>Gestión de Libros</span>
+      </button>
+      <button id="admin-tab-btn-users" onclick="switchAdminTab('users')" class="py-3 px-4 sm:px-6 text-slate-500 hover:text-cundech-600 flex items-center gap-2 whitespace-nowrap">
+        <i class="fa-solid fa-user-gear"></i>
+        <span>Gestión de Usuarios Admin</span>
+      </button>
+    </div>
+
+    <!-- TAB 1: BOOKS MANAGEMENT -->
+    <div id="admin-tab-books" class="space-y-6 sm:space-y-8">
+      
+      <!-- Excel Import Section -->
+      <div class="bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-slate-200 shadow-sm">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 sm:gap-4 mb-4">
+          <div>
+            <h3 class="font-serif text-base sm:text-lg font-bold text-slate-900 flex items-center gap-2">
+              <i class="fa-solid fa-file-excel text-emerald-600"></i>
+              <span>Importación Masiva de Libros (Excel)</span>
+            </h3>
+            <p class="text-xs text-slate-500 mt-0.5">Sube un archivo .XLSX o .CSV con las columnas: Título, Autor, Editorial, Género, Año, Copias, ISBN, Descripción, Portada.</p>
+          </div>
+          <button onclick="downloadExcelTemplate()" class="px-3 py-2 sm:px-3.5 sm:py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold transition flex items-center gap-2 self-start md:self-auto whitespace-nowrap">
+            <i class="fa-solid fa-download"></i>
+            <span>Descargar Plantilla Excel</span>
+          </button>
+        </div>
+
+        <div class="border-2 border-dashed border-slate-300 hover:border-cundech-500 rounded-2xl p-4 sm:p-5 text-center transition bg-slate-50/50 relative">
+          <input type="file" id="excel-file-input" accept=".xlsx, .xls, .csv" onchange="handleExcelFile(event)" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
+          <div class="pointer-events-none space-y-1">
+            <i class="fa-solid fa-cloud-arrow-up text-2xl sm:text-3xl text-emerald-600"></i>
+            <p class="text-xs font-bold text-slate-700">Haz clic o arrastra un archivo Excel aquí</p>
+          </div>
+        </div>
+
+        <!-- Excel Preview Area -->
+        <div id="excel-preview-area" class="hidden mt-4 space-y-3">
+          <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between bg-emerald-50 border border-emerald-200 p-3 rounded-xl gap-2 sm:gap-0">
+            <span class="text-xs text-emerald-800 font-semibold"><i class="fa-solid fa-check-circle mr-1"></i> <strong id="excel-row-count">0</strong> libros detectados.</span>
+            <div class="flex items-center space-x-2 w-full sm:w-auto justify-end">
+              <button onclick="cancelExcelPreview()" class="px-3 py-1 text-xs text-slate-600 font-medium">Cancelar</button>
+              <button onclick="confirmExcelImport()" class="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition">Confirmar e Importar</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Book Inventory Header & Table -->
+      <div class="bg-white rounded-2xl sm:rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="p-4 sm:p-6 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+          <div>
+            <h3 class="font-serif text-base sm:text-lg font-bold text-slate-900">Inventario de Libros</h3>
+            <p class="text-xs text-slate-500">Agrega individualmente, modifica o elimina libros del sistema.</p>
+          </div>
+          <div class="flex flex-col xs:flex-row items-stretch xs:items-center gap-2 sm:gap-3">
+            <input type="text" id="admin-book-search" oninput="renderAdminBookTable()" placeholder="Buscar en inventario..." class="px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-cundech-500 w-full xs:w-auto">
+            <button onclick="openBookModalForCreate()" class="px-4 py-2 bg-cundech-600 hover:bg-cundech-700 text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 whitespace-nowrap shadow-sm">
+              <i class="fa-solid fa-plus"></i>
+              <span>Nuevo Libro</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="overflow-x-auto custom-scrollbar">
+          <table class="w-full text-left text-sm min-w-[640px]">
+            <thead class="bg-slate-50 text-slate-500 text-xs font-bold uppercase border-b border-slate-200">
+              <tr>
+                <th class="p-3 sm:p-4">Portada / Título</th>
+                <th class="p-3 sm:p-4">Autor / Editorial</th>
+                <th class="p-3 sm:p-4">Género</th>
+                <th class="p-3 sm:p-4">Copias</th>
+                <th class="p-3 sm:p-4">Estado</th>
+                <th class="p-3 sm:p-4 text-right">Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="admin-books-tbody" class="divide-y divide-slate-200 text-xs sm:text-sm">
+              <!-- Rendered via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- TAB 2: USERS MANAGEMENT -->
+    <div id="admin-tab-users" class="hidden space-y-6">
+      <div class="bg-white rounded-2xl sm:rounded-3xl border border-slate-200 shadow-sm overflow-hidden p-4 sm:p-6">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 mb-6">
+          <div>
+            <h3 class="font-serif text-base sm:text-lg font-bold text-slate-900">Gestión de Usuarios Administradores</h3>
+            <p class="text-xs text-slate-500">Crea, modifica contraseñas o elimina administradores con acceso.</p>
+          </div>
+          <button onclick="openUserModalForCreate()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-2 shadow-sm whitespace-nowrap self-stretch sm:self-auto justify-center">
+            <i class="fa-solid fa-user-plus"></i>
+            <span>Nuevo Administrador</span>
+          </button>
+        </div>
+
+        <div class="overflow-x-auto custom-scrollbar">
+          <table class="w-full text-left text-sm min-w-[500px]">
+            <thead class="bg-slate-50 text-slate-500 text-xs font-bold uppercase border-b border-slate-200">
+              <tr>
+                <th class="p-3 sm:p-4">Nombre Usuario</th>
+                <th class="p-3 sm:p-4">Nombre Completo</th>
+                <th class="p-3 sm:p-4">Rol</th>
+                <th class="p-3 sm:p-4 text-right">Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="admin-users-tbody" class="divide-y divide-slate-200">
+              <!-- Rendered dynamically -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Admin Manual Book Create/Edit Modal -->
+  <div id="admin-book-modal" class="hidden fixed inset-0 z-50 overflow-y-auto modal-backdrop bg-slate-950/60 flex items-center justify-center p-3 sm:p-4">
+    <div class="bg-white rounded-2xl sm:rounded-3xl max-w-xl w-full shadow-2xl border border-slate-200 overflow-hidden relative my-6 max-h-[90vh] flex flex-col">
+      <div class="bg-cundech-600 p-4 sm:p-5 text-white flex items-center justify-between flex-shrink-0">
+        <h3 id="admin-book-form-title" class="font-serif text-base sm:text-lg font-bold">Agregar Nuevo Libro</h3>
+        <button onclick="closeModal('admin-book-modal')" class="text-white/80 hover:text-white p-1"><i class="fa-solid fa-xmark text-lg"></i></button>
+      </div>
+
+      <form id="book-form" onsubmit="saveBookForm(event)" class="p-4 sm:p-6 space-y-4 overflow-y-auto custom-scrollbar">
+        <input type="hidden" id="form-book-id">
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+          <div class="sm:col-span-2">
+            <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Título del Libro *</label>
+            <input type="text" id="form-titulo" required class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-cundech-500 focus:outline-none">
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Autor *</label>
+            <input type="text" id="form-autor" required class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-cundech-500 focus:outline-none">
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Editorial *</label>
+            <input type="text" id="form-editorial" required class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-cundech-500 focus:outline-none">
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Género Literario / Académico *</label>
+            <input type="text" id="form-genero" required placeholder="Ej: Derecho, Medicina, Novela..." class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-cundech-500 focus:outline-none">
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Año de Publicación</label>
+            <input type="number" id="form-año" value="2024" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-cundech-500 focus:outline-none">
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold uppercase text-slate-600 mb-1">ISBN</label>
+            <input type="text" id="form-isbn" placeholder="978-..." class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-cundech-500 focus:outline-none">
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Copias / Ejemplares *</label>
+            <input type="number" id="form-copias" min="0" value="1" required class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-cundech-500 focus:outline-none">
+          </div>
+
+          <div class="sm:col-span-2">
+            <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Palabras Clave (Separadas por comas)</label>
+            <input type="text" id="form-keywords" placeholder="ej: derecho civil, leyes, guatemala" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-cundech-500 focus:outline-none">
+          </div>
+
+          <!-- Cover Image Upload Area -->
+          <div class="sm:col-span-2 space-y-2 bg-slate-50 p-3 sm:p-4 rounded-2xl border border-slate-200">
+            <label class="block text-xs font-bold uppercase text-slate-700">Imagen de Portada (Opcional)</label>
+            
+            <div class="flex flex-col sm:flex-row gap-2 sm:gap-3 items-stretch sm:items-center">
+              <input type="text" id="form-portada-url" placeholder="URL de imagen https://..." oninput="previewCoverUrl()" class="flex-1 px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs focus:outline-none">
+              <span class="text-xs text-slate-400 font-bold text-center sm:text-left">Ó</span>
+              <label class="px-3 py-2 bg-cundech-100 hover:bg-cundech-200 text-cundech-800 text-xs font-bold rounded-xl cursor-pointer transition whitespace-nowrap text-center">
+                <i class="fa-solid fa-upload mr-1"></i> Subir Imagen
+                <input type="file" id="form-portada-file" accept="image/*" onchange="handleCoverFileUpload(event)" class="hidden">
+              </label>
+            </div>
+
+            <div id="cover-preview-container" class="hidden mt-2 flex items-center gap-3">
+              <img id="cover-preview-img" class="w-12 h-16 object-cover rounded border border-slate-300">
+              <button type="button" onclick="removeCoverImage()" class="text-xs text-red-600 hover:underline">Eliminar imagen</button>
+            </div>
+            <p class="text-[10px] text-slate-400">Si dejas este apartado vacío, el libro se mostrará en el catálogo de usuario sin recuadro de imagen.</p>
+          </div>
+
+          <div class="sm:col-span-2">
+            <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Descripción / Resumen</label>
+            <textarea id="form-descripcion" rows="3" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-cundech-500 focus:outline-none"></textarea>
+          </div>
+        </div>
+
+        <div class="pt-3 flex justify-end space-x-3 border-t border-slate-100 flex-shrink-0">
+          <button type="button" onclick="closeModal('admin-book-modal')" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl text-xs">Cancelar</button>
+          <button type="submit" class="px-5 py-2 bg-cundech-600 hover:bg-cundech-700 text-white font-bold rounded-xl text-xs shadow-md">Guardar Libro</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Admin User Account CRUD Modal -->
+  <div id="admin-user-modal" class="hidden fixed inset-0 z-50 overflow-y-auto modal-backdrop bg-slate-950/60 flex items-center justify-center p-3 sm:p-4">
+    <div class="bg-white rounded-2xl sm:rounded-3xl max-w-md w-full shadow-2xl border border-slate-200 overflow-hidden relative my-6">
+      <div class="bg-blue-600 p-4 sm:p-5 text-white flex items-center justify-between">
+        <h3 id="admin-user-form-title" class="font-serif text-base sm:text-lg font-bold">Administrador</h3>
+        <button onclick="closeModal('admin-user-modal')" class="text-white/80 hover:text-white p-1"><i class="fa-solid fa-xmark text-lg"></i></button>
+      </div>
+
+      <form id="user-form" onsubmit="saveUserForm(event)" class="p-4 sm:p-6 space-y-4">
+        <input type="hidden" id="form-user-old-username">
+
+        <div>
+          <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Nombre Completo *</label>
+          <input type="text" id="form-user-fullname" required class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Nombre de Usuario *</label>
+          <input type="text" id="form-user-username" required class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Contraseña *</label>
+          <input type="password" id="form-user-password" required class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+
+        <div class="pt-3 flex justify-end space-x-3 border-t border-slate-100">
+          <button type="button" onclick="closeModal('admin-user-modal')" class="px-4 py-2 bg-slate-100 text-slate-700 font-semibold rounded-xl text-xs">Cancelar</button>
+          <button type="submit" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs shadow-md">Guardar Usuario</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Database Settings Modal -->
+  <div id="db-modal" class="hidden fixed inset-0 z-50 overflow-y-auto modal-backdrop bg-slate-950/60 flex items-center justify-center p-3 sm:p-4">
+    <div class="bg-white rounded-2xl sm:rounded-3xl max-w-lg w-full shadow-2xl border border-slate-200 overflow-hidden relative my-6">
+      <div class="bg-cundech-600 p-4 sm:p-5 text-white flex items-center justify-between">
+        <h3 class="font-serif text-base sm:text-lg font-bold flex items-center gap-2">
+          <i class="fa-solid fa-database text-amber-400"></i>
+          <span>Conectar Firebase Firestore</span>
+        </h3>
+        <button onclick="closeModal('db-modal')" class="text-white/80 hover:text-white p-1"><i class="fa-solid fa-xmark text-lg"></i></button>
+      </div>
+
+      <div class="p-4 sm:p-6 space-y-4">
+        <p class="text-xs text-slate-600 leading-relaxed">
+          Pega las credenciales de tu proyecto de Firebase. Puedes pegar el JSON directo o el bloque JavaScript completo que te da Firebase.
+        </p>
+
+        <textarea id="firebase-config-json" rows="6" placeholder='{
+  "apiKey": "AIzaSy...",
+  "authDomain": "cundech.firebaseapp.com",
+  "projectId": "cundech",
+  "storageBucket": "cundech.appspot.com",
+  "messagingSenderId": "12345",
+  "appId": "1:12345:web:abc"
+}' class="w-full p-3 font-mono text-xs bg-slate-900 text-amber-300 border border-slate-700 rounded-xl focus:outline-none"></textarea>
+
+        <div id="db-config-error" class="hidden p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-700 font-medium"></div>
+
+        <div class="flex items-center justify-between border-t border-slate-100 pt-3">
+          <button onclick="clearDbConfig()" class="text-xs text-red-600 hover:underline font-semibold">Usar modo local</button>
+          <button onclick="saveDbConfig()" class="px-5 py-2 bg-cundech-600 hover:bg-cundech-700 text-white font-bold rounded-xl text-xs shadow-md">Guardar y Conectar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="bg-cundech-900 text-cundech-100 py-6 border-t border-cundech-800 mt-auto">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
+      <div class="text-center sm:text-left">
+        <span class="font-serif font-bold text-white">Biblioteca CUNDECH</span>
+        <span class="mx-2 hidden xs:inline">•</span>
+        <span class="block xs:inline">Centro Universitario del Chimaltenango</span>
+      </div>
+      <div class="flex items-center space-x-3 text-cundech-200">
+        <!-- Secret footer trigger for admin login (Double click required, default cursor) -->
+        <span ondblclick="triggerAdminAuthModal()" class="cursor-default select-none">&copy; 2026 CUNDECH</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Toast Notifications -->
+  <div id="toast" class="fixed bottom-6 right-6 z-50 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none bg-slate-900 text-white px-4 py-3 rounded-xl shadow-2xl flex items-center space-x-3 border border-slate-700 max-w-[90vw] sm:max-w-md">
+    <i id="toast-icon" class="fa-solid fa-circle-check text-emerald-400 text-lg flex-shrink-0"></i>
+    <span id="toast-message" class="text-sm font-medium leading-snug">Operación exitosa</span>
+  </div>
+
+  <!-- ================= STATE & SEED DATA ================= -->
+  <script>
+    const INITIAL_BOOKS = [
+      {
+        id: 'book-cundech-1',
+        titulo: 'Introducción al Estudio del Derecho',
+        autor: 'Eduardo García Máynez',
+        editorial: 'Editorial Porrúa',
+        genero: 'Derecho',
+        año: 2020,
+        copias: 5,
+        disponible: true,
+        isbn: '978-9684328006',
+        keywords: 'derecho, leyes, jurista, cundech, ciencia juridica',
+        descripcion: 'Obra fundamental para el estudio de los conceptos básicos de la ciencia jurídica, análisis de la norma y las fuentes del derecho.',
+        portada: '' // Empty cover testing image hiding
+      },
+      {
+        id: 'book-cundech-2',
+        titulo: 'Anatomía Humana con Orientación Clínica',
+        autor: 'Keith L. Moore',
+        editorial: 'Wolters Kluwer',
+        genero: 'Medicina',
+        año: 2018,
+        copias: 3,
+        disponible: true,
+        isbn: '978-8417033637',
+        keywords: 'medicina, anatomia, salud, cundech, cuerpo humano',
+        descripcion: 'Texto clásico con enfoque clínico detallado, ilustraciones médicas y correlaciones prácticas de las estructuras anatómicas.',
+        portada: ''
+      },
+      {
+        id: 'book-cundech-3',
+        titulo: 'Principios de Economía',
+        autor: 'N. Gregory Mankiw',
+        editorial: 'Cengage Learning',
+        genero: 'Economía',
+        año: 2021,
+        copias: 0,
+        disponible: false,
+        isbn: '978-6075269085',
+        keywords: 'economia, finanzas, mercado, microeconomia',
+        descripcion: 'Análisis comprensivo de las decisiones económicas, los mercados y el papel del gobierno en la micro y macroeconomía.',
+        portada: ''
+      }
+    ];
+
+    const INITIAL_USERS = [
+      { username: 'admin', fullname: 'Administrador Principal CUNDECH', password: 'admin123' }
+    ];
+
+    // Default Firebase Config generated for biblioteca-cundech
+    const DEFAULT_FIREBASE_CONFIG = {
+      apiKey: "AIzaSyAZ8RoOHVSxSlZ4-iRKFY9Bub8u2q39soE",
+      authDomain: "biblioteca-cundech.firebaseapp.com",
+      projectId: "biblioteca-cundech",
+      storageBucket: "biblioteca-cundech.firebasestorage.app",
+      messagingSenderId: "1041939055727",
+      appId: "1:1041939055727:web:e7a7ab0412460f1f2af99a",
+      measurementId: "G-YM616JFPDS"
+    };
+
+    window.appState = {
+      books: [],
+      users: [],
+      currentView: 'client',
+      isAdminLoggedIn: false,
+      searchTerm: '',
+      selectedGenre: 'Todos',
+      selectedEditorial: 'Todas',
+      sortBy: 'titulo',
+      excelImportData: [],
+      firebaseConfig: JSON.parse(localStorage.getItem('cundech_firebase_config') || 'null') || DEFAULT_FIREBASE_CONFIG
+    };
+
+    function loadLocalStorage() {
+      const bStored = localStorage.getItem('cundech_books');
+      window.appState.books = bStored ? JSON.parse(bStored) : [...INITIAL_BOOKS];
+
+      const uStored = localStorage.getItem('cundech_admin_users');
+      window.appState.users = uStored ? JSON.parse(uStored) : [...INITIAL_USERS];
+
+      const session = localStorage.getItem('cundech_admin_session');
+      if (session === 'true') window.appState.isAdminLoggedIn = true;
+    }
+
+    function saveLocalData() {
+      localStorage.setItem('cundech_books', JSON.stringify(window.appState.books));
+      localStorage.setItem('cundech_admin_users', JSON.stringify(window.appState.users));
+    }
+
+    loadLocalStorage();
+  </script>
+
+  <!-- FIREBASE ENGINE -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getFirestore, collection, onSnapshot, doc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    let db = null;
+
+    function updateDbStatus(isConnected, text) {
+      const dot = document.getElementById('db-status-dot');
+      const label = document.getElementById('db-status-text');
+      if (!dot || !label) return;
+
+      if (isConnected) {
+        dot.className = "w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]";
+        label.textContent = text || "Firebase Firestore";
+        label.className = "text-emerald-300 font-medium";
+      } else {
+        dot.className = "w-2 h-2 rounded-full bg-amber-400";
+        label.textContent = text || "Modo Local";
+        label.className = "text-amber-300 font-medium";
+      }
+    }
+
+    if (window.appState.firebaseConfig) {
+      try {
+        const app = initializeApp(window.appState.firebaseConfig);
+        db = getFirestore(app);
+
+        onSnapshot(collection(db, "books"), (snapshot) => {
+          updateDbStatus(true, "Firebase En Vivo");
+          const list = [];
+          snapshot.forEach(doc => list.push({ id: doc.id, ...doc.data() }));
+          if (list.length > 0) {
+            window.appState.books = list;
+            saveLocalData();
+            updateUI();
+          }
+        }, (err) => {
+          console.warn("Firestore fallback to local:", err.message);
+          updateDbStatus(false, "Modo Local (Respaldo)");
+        });
+      } catch (e) { 
+        console.error("Firebase init error:", e);
+        updateDbStatus(false, "Modo Local");
+      }
+    } else {
+      updateDbStatus(false, "Modo Local");
+    }
+
+    window.syncBook = async function(bookData, id) {
+      const bookId = id || ('book-' + Date.now());
+      if (db) {
+        try {
+          await setDoc(doc(db, "books", bookId), bookData, { merge: true });
+        } catch(e) {}
+      }
+      
+      const idx = window.appState.books.findIndex(b => b.id === bookId);
+      if (idx !== -1) window.appState.books[idx] = { ...bookData, id: bookId };
+      else window.appState.books.push({ ...bookData, id: bookId });
+      
+      saveLocalData();
+      updateUI();
+    };
+
+    window.removeBook = async function(id) {
+      if (db) {
+        try { await deleteDoc(doc(db, "books", id)); } catch(e) {}
+      }
+      window.appState.books = window.appState.books.filter(b => b.id !== id);
+      saveLocalData();
+      updateUI();
+    };
+  </script>
+
+  <!-- APP LOGIC & INTERACTION -->
+  <script>
+    // SECRET ADMIN TRIGGER LOGIC
+    function triggerAdminAuthModal() {
+      if (window.appState.isAdminLoggedIn) {
+        navigateTo('admin');
+      } else {
+        document.getElementById('modal-admin-login').classList.remove('hidden');
+      }
+    }
+
+    // AUTH & ROUTING
+    function handleAdminLogin(e) {
+      e.preventDefault();
+      const u = document.getElementById('login-username').value.trim();
+      const p = document.getElementById('login-password').value.trim();
+
+      const userMatch = window.appState.users.find(usr => usr.username.toLowerCase() === u.toLowerCase() && usr.password === p);
+
+      if (userMatch) {
+        window.appState.isAdminLoggedIn = true;
+        localStorage.setItem('cundech_admin_session', 'true');
+        closeModal('modal-admin-login');
+        showToast("Sesión de administración iniciada", "success");
+        navigateTo('admin');
+      } else {
+        showToast("Usuario o contraseña incorrectos", "error");
+      }
+    }
+
+    function logoutAdmin() {
+      window.appState.isAdminLoggedIn = false;
+      localStorage.removeItem('cundech_admin_session');
+      showToast("Has salido del panel de administración", "info");
+      navigateTo('client');
+    }
+
+    function navigateTo(view) {
+      if (view === 'admin' && !window.appState.isAdminLoggedIn) {
+        showToast("Acceso restringido a administradores", "error");
+        triggerAdminAuthModal();
+        return;
+      }
+
+      window.appState.currentView = view;
+      document.getElementById('view-client').classList.toggle('hidden', view !== 'client');
+      document.getElementById('view-admin').classList.toggle('hidden', view !== 'admin');
+      
+      // Mostrar el estado de la BD y la navegación de admin solo si está logueado en la vista admin
+      const isDbVisible = window.appState.isAdminLoggedIn && view === 'admin';
+      document.getElementById('db-status-badge').classList.toggle('hidden', !isDbVisible);
+      document.getElementById('admin-session-nav').classList.toggle('hidden', !window.appState.isAdminLoggedIn);
+
+      updateUI();
+    }
+
+    // UI UPDATES
+    function updateUI() {
+      const books = window.appState.books || [];
+
+      renderGenreTabs(books);
+      renderEditorialSelect(books);
+      renderDashboards(books);
+
+      if (window.appState.currentView === 'client') {
+        applyFilters();
+      } else {
+        renderAdminBookTable();
+        renderAdminUserTable();
+      }
+    }
+
+    function renderDashboards(books) {
+      const total = books.length;
+      const available = books.filter(b => b.disponible || (b.copias && b.copias > 0)).length;
+      const genres = new Set(books.map(b => b.genero || 'General')).size;
+      const users = window.appState.users.length;
+
+      document.getElementById('dash-total-books').textContent = total;
+      document.getElementById('dash-available-books').textContent = available;
+      document.getElementById('dash-total-genres').textContent = genres;
+      document.getElementById('dash-total-users').textContent = users;
+    }
+
+    function renderGenreTabs(books) {
+      const container = document.getElementById('genre-tabs');
+      if (!container) return;
+
+      const genres = ['Todos', ...new Set(books.map(b => b.genero || 'General'))];
+      const active = window.appState.selectedGenre;
+
+      container.innerHTML = genres.map(g => `
+        <button 
+          onclick="setGenreFilter('${g}')"
+          class="px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition border ${
+            active === g 
+              ? 'bg-cundech-600 text-white border-cundech-600 shadow-sm' 
+              : 'bg-slate-100 text-slate-600 border-transparent hover:bg-slate-200'
+          }"
+        >
+          ${g}
+        </button>
+      `).join('');
+    }
+
+    function renderEditorialSelect(books) {
+      const select = document.getElementById('editorial-select');
+      if (!select) return;
+
+      const curr = select.value;
+      const editorials = [...new Set(books.map(b => b.editorial || 'Desconocida'))].sort();
+
+      select.innerHTML = `<option value="Todas">Todas las Editoriales</option>`;
+      editorials.forEach(e => {
+        const opt = document.createElement('option');
+        opt.value = e;
+        opt.textContent = e;
+        select.appendChild(opt);
+      });
+      select.value = curr;
+    }
+
+    // USER CATALOG FILTERING & RENDERING
+    function handleSearch() {
+      const input = document.getElementById('search-input');
+      window.appState.searchTerm = input.value;
+      document.getElementById('clear-search').classList.toggle('hidden', !input.value);
+      applyFilters();
+    }
+
+    function clearSearch() {
+      document.getElementById('search-input').value = '';
+      window.appState.searchTerm = '';
+      document.getElementById('clear-search').classList.add('hidden');
+      applyFilters();
+    }
+
+    function setGenreFilter(genre) {
+      window.appState.selectedGenre = genre;
+      renderGenreTabs(window.appState.books);
+      applyFilters();
+    }
+
+    function resetFilters() {
+      window.appState.searchTerm = '';
+      window.appState.selectedGenre = 'Todos';
+      window.appState.selectedEditorial = 'Todas';
+      window.appState.sortBy = 'titulo';
+
+      document.getElementById('search-input').value = '';
+      document.getElementById('clear-search').classList.add('hidden');
+      document.getElementById('editorial-select').value = 'Todas';
+      document.getElementById('sort-select').value = 'titulo';
+
+      renderGenreTabs(window.appState.books);
+      applyFilters();
+    }
+
+    function applyFilters() {
+      const books = window.appState.books || [];
+      const edVal = document.getElementById('editorial-select')?.value || 'Todas';
+      const sortVal = document.getElementById('sort-select')?.value || 'titulo';
+
+      window.appState.selectedEditorial = edVal;
+      window.appState.sortBy = sortVal;
+
+      let filtered = books.filter(b => {
+        const query = (window.appState.searchTerm || '').toLowerCase();
+        const matchesQuery = !query || (
+          (b.titulo && b.titulo.toLowerCase().includes(query)) ||
+          (b.autor && b.autor.toLowerCase().includes(query)) ||
+          (b.editorial && b.editorial.toLowerCase().includes(query)) ||
+          (b.isbn && b.isbn.toLowerCase().includes(query)) ||
+          (b.genero && b.genero.toLowerCase().includes(query)) ||
+          (b.keywords && b.keywords.toLowerCase().includes(query)) ||
+          (b.descripcion && b.descripcion.toLowerCase().includes(query))
+        );
+
+        const matchesGenre = window.appState.selectedGenre === 'Todos' || b.genero === window.appState.selectedGenre;
+        const matchesEditorial = window.appState.selectedEditorial === 'Todas' || b.editorial === window.appState.selectedEditorial;
+
+        return matchesQuery && matchesGenre && matchesEditorial;
+      });
+
+      filtered.sort((a, b) => {
+        if (window.appState.sortBy === 'titulo') return (a.titulo || '').localeCompare(b.titulo || '');
+        if (window.appState.sortBy === 'autor') return (a.autor || '').localeCompare(b.autor || '');
+        if (window.appState.sortBy === 'año-desc') return (b.año || 0) - (a.año || 0);
+        if (window.appState.sortBy === 'año-asc') return (a.año || 0) - (b.año || 0);
+        return 0;
+      });
+
+      renderUserGrid(filtered);
+
+      const hasActive = window.appState.searchTerm || window.appState.selectedGenre !== 'Todos' || 
+                        window.appState.selectedEditorial !== 'Todas';
+      document.getElementById('reset-filters-btn')?.classList.toggle('hidden', !hasActive);
+    }
+
+    function renderUserGrid(books) {
+      const grid = document.getElementById('books-grid');
+      const empty = document.getElementById('empty-state');
+      const count = document.getElementById('results-count');
+
+      count.textContent = `${books.length} ${books.length === 1 ? 'libro' : 'libros'}`;
+
+      if (books.length === 0) {
+        grid.innerHTML = '';
+        empty.classList.remove('hidden');
+        return;
+      }
+
+      empty.classList.add('hidden');
+
+      grid.innerHTML = books.map(book => {
+        const hasImage = book.portada && book.portada.trim() !== '';
+
+        return `
+          <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm card-hover flex flex-col justify-between">
+            <div>
+              <!-- CONDITIONAL COVER IMAGE BLOCK -->
+              ${hasImage ? `
+                <div class="relative h-56 bg-slate-900 overflow-hidden">
+                  <img src="${book.portada}" alt="${book.titulo}" class="w-full h-full object-cover" onerror="this.parentElement.style.display='none';">
+                </div>
+              ` : ''}
+
+              <div class="p-5">
+                <span class="text-[11px] font-semibold text-cundech-600 bg-cundech-50 px-2 py-0.5 rounded inline-block mb-2">
+                  ${book.genero || 'General'}
+                </span>
+
+                <h3 class="font-serif text-base font-bold text-slate-900 line-clamp-2 mb-1 leading-snug">
+                  ${book.titulo}
+                </h3>
+                <p class="text-xs font-medium text-slate-600 mb-2">
+                  <i class="fa-solid fa-feather text-amber-600 mr-1"></i> ${book.autor}
+                </p>
+
+                <div class="text-[11px] text-slate-400 mb-3 flex items-center space-x-2">
+                  <span>${book.editorial}</span>
+                  <span>•</span>
+                  <span>${book.año || 'S/A'}</span>
+                </div>
+
+                <p class="text-xs text-slate-600 line-clamp-3 leading-relaxed font-light">
+                  ${book.descripcion || 'Sin descripción redactada.'}
+                </p>
+              </div>
+            </div>
+
+            <div class="p-5 pt-0">
+              <button onclick="openBookDetail('${book.id}')" class="w-full py-2 bg-slate-100 hover:bg-cundech-600 hover:text-white text-slate-700 rounded-xl text-xs font-bold transition flex items-center justify-center space-x-1.5">
+                <span>Ver Ficha Completa</span>
+                <i class="fa-solid fa-arrow-right text-[10px]"></i>
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // USER BOOK DETAIL MODAL
+    function openBookDetail(id) {
+      const book = window.appState.books.find(b => b.id === id);
+      if (!book) return;
+
+      const isDisp = book.disponible || (book.copias > 0);
+      const hasImage = book.portada && book.portada.trim() !== '';
+
+      document.getElementById('modal-content').innerHTML = `
+        <div class="flex flex-col ${hasImage ? 'md:flex-row' : ''} gap-6">
+          ${hasImage ? `
+            <div class="w-full md:w-5/12 flex-shrink-0">
+              <img src="${book.portada}" class="w-full h-auto max-h-80 object-cover rounded-2xl shadow-md border border-slate-200">
+            </div>
+          ` : ''}
+
+          <div class="flex-1 space-y-4">
+            <div>
+              <span class="text-xs font-bold text-cundech-700 bg-cundech-50 px-3 py-1 rounded-lg border border-cundech-100 inline-block mb-2">
+                Género: ${book.genero || 'General'}
+              </span>
+              <h2 class="font-serif text-2xl font-bold text-slate-900 leading-tight">${book.titulo}</h2>
+              <p class="text-sm font-semibold text-slate-600 mt-1"><i class="fa-solid fa-feather text-amber-600 mr-1"></i> Autor: ${book.autor}</p>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3 bg-slate-50 p-4 rounded-xl text-xs border border-slate-200">
+              <div><span class="block text-slate-400">Editorial</span><span class="font-bold text-slate-700">${book.editorial}</span></div>
+              <div><span class="block text-slate-400">Año Publicación</span><span class="font-bold text-slate-700">${book.año || 'N/A'}</span></div>
+              <div><span class="block text-slate-400">ISBN</span><span class="font-bold text-slate-700">${book.isbn || 'N/A'}</span></div>
+              <div><span class="block text-slate-400">Disponibilidad</span><span class="font-bold ${isDisp ? 'text-emerald-600' : 'text-red-600'}">${isDisp ? `${book.copias} ejemplares` : 'Agotado'}</span></div>
+            </div>
+
+            <div>
+              <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">Resumen / Descripción</h4>
+              <p class="text-xs text-slate-600 leading-relaxed font-light">${book.descripcion || 'Sin descripción.'}</p>
+            </div>
+
+            ${book.keywords ? `
+              <div>
+                <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">Palabras Clave</h4>
+                <div class="flex flex-wrap gap-1.5">
+                  ${book.keywords.split(',').map(kw => `<span class="bg-slate-100 text-slate-600 px-2 py-0.5 rounded text-[10px] font-medium">${kw.trim()}</span>`).join('')}
+                </div>
+              </div>
+            ` : ''}
+          </div>
+        </div>
+      `;
+
+      document.getElementById('book-modal').classList.remove('hidden');
+    }
+
+    // ADMIN TABS & INVENTORY CRUD
+    function switchAdminTab(tab) {
+      document.getElementById('admin-tab-books').classList.toggle('hidden', tab !== 'books');
+      document.getElementById('admin-tab-users').classList.toggle('hidden', tab !== 'users');
+
+      const btnB = document.getElementById('admin-tab-btn-books');
+      const btnU = document.getElementById('admin-tab-btn-users');
+
+      if (tab === 'books') {
+        btnB.className = "py-3 px-4 sm:px-6 text-cundech-600 border-b-2 border-cundech-600 flex items-center gap-2 whitespace-nowrap";
+        btnU.className = "py-3 px-4 sm:px-6 text-slate-500 hover:text-cundech-600 flex items-center gap-2 whitespace-nowrap";
+      } else {
+        btnU.className = "py-3 px-4 sm:px-6 text-cundech-600 border-b-2 border-cundech-600 flex items-center gap-2 whitespace-nowrap";
+        btnB.className = "py-3 px-4 sm:px-6 text-slate-500 hover:text-cundech-600 flex items-center gap-2 whitespace-nowrap";
+      }
+    }
+
+    function renderAdminBookTable() {
+      const tbody = document.getElementById('admin-books-tbody');
+      if (!tbody) return;
+
+      const q = (document.getElementById('admin-book-search')?.value || '').toLowerCase();
+      let books = window.appState.books || [];
+
+      if (q) {
+        books = books.filter(b => b.titulo.toLowerCase().includes(q) || b.autor.toLowerCase().includes(q));
+      }
+
+      if (books.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-slate-400">Sin registros.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = books.map(book => `
+        <tr class="hover:bg-slate-50">
+          <td class="p-3 sm:p-4 font-bold text-slate-900">
+            <div class="flex items-center space-x-3">
+              ${book.portada ? `<img src="${book.portada}" class="w-8 h-10 object-cover rounded shadow-sm flex-shrink-0">` : `<div class="w-8 h-10 bg-slate-200 rounded flex items-center justify-center text-[10px] text-slate-400 font-bold flex-shrink-0">SIN IMG</div>`}
+              <div>
+                <span class="block leading-snug">${book.titulo}</span>
+                <span class="text-[10px] text-slate-400">ISBN: ${book.isbn || 'N/A'}</span>
+              </div>
+            </div>
+          </td>
+          <td class="p-3 sm:p-4">
+            <span class="block font-medium">${book.autor}</span>
+            <span class="text-xs text-slate-400">${book.editorial}</span>
+          </td>
+          <td class="p-3 sm:p-4"><span class="bg-slate-100 px-2 py-1 rounded text-xs font-semibold whitespace-nowrap">${book.genero}</span></td>
+          <td class="p-3 sm:p-4 font-bold">${book.copias}</td>
+          <td class="p-3 sm:p-4">
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold whitespace-nowrap ${book.copias > 0 ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'}">
+              ${book.copias > 0 ? 'Disponible' : 'Agotado'}
+            </span>
+          </td>
+          <td class="p-3 sm:p-4 text-right whitespace-nowrap">
+            <button onclick="openBookModalForEdit('${book.id}')" class="p-1.5 text-slate-500 hover:text-cundech-600"><i class="fa-solid fa-pen-to-square"></i></button>
+            <button onclick="deleteBookAdmin('${book.id}')" class="p-1.5 text-slate-500 hover:text-red-600"><i class="fa-solid fa-trash-can"></i></button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    // COVER PREVIEW & MANUAL FILE ENTRY
+    function previewCoverUrl() {
+      const url = document.getElementById('form-portada-url').value.trim();
+      const container = document.getElementById('cover-preview-container');
+      const img = document.getElementById('cover-preview-img');
+
+      if (url) {
+        img.src = url;
+        container.classList.remove('hidden');
+      } else {
+        container.classList.add('hidden');
+      }
+    }
+
+    function handleCoverFileUpload(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        document.getElementById('form-portada-url').value = evt.target.result;
+        previewCoverUrl();
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function removeCoverImage() {
+      document.getElementById('form-portada-url').value = '';
+      document.getElementById('form-portada-file').value = '';
+      document.getElementById('cover-preview-container').classList.add('hidden');
+    }
+
+    function openBookModalForCreate() {
+      document.getElementById('admin-book-form-title').textContent = "Agregar Nuevo Libro";
+      document.getElementById('form-book-id').value = '';
+      document.getElementById('book-form').reset();
+      removeCoverImage();
+      document.getElementById('admin-book-modal').classList.remove('hidden');
+    }
+
+    function openBookModalForEdit(id) {
+      const b = window.appState.books.find(x => x.id === id);
+      if (!b) return;
+
+      document.getElementById('admin-book-form-title').textContent = "Editar Libro";
+      document.getElementById('form-book-id').value = b.id;
+      document.getElementById('form-titulo').value = b.titulo || '';
+      document.getElementById('form-autor').value = b.autor || '';
+      document.getElementById('form-editorial').value = b.editorial || '';
+      document.getElementById('form-genero').value = b.genero || 'General';
+      document.getElementById('form-año').value = b.año || 2024;
+      document.getElementById('form-isbn').value = b.isbn || '';
+      document.getElementById('form-copias').value = b.copias ?? 1;
+      document.getElementById('form-keywords').value = b.keywords || '';
+      document.getElementById('form-portada-url').value = b.portada || '';
+      document.getElementById('form-descripcion').value = b.descripcion || '';
+
+      previewCoverUrl();
+      document.getElementById('admin-book-modal').classList.remove('hidden');
+    }
+
+    async function saveBookForm(e) {
+      e.preventDefault();
+      const id = document.getElementById('form-book-id').value;
+      const copias = parseInt(document.getElementById('form-copias').value) || 0;
+
+      const data = {
+        titulo: document.getElementById('form-titulo').value.trim(),
+        autor: document.getElementById('form-autor').value.trim(),
+        editorial: document.getElementById('form-editorial').value.trim(),
+        genero: document.getElementById('form-genero').value.trim(),
+        año: parseInt(document.getElementById('form-año').value) || 2024,
+        isbn: document.getElementById('form-isbn').value.trim(),
+        copias: copias,
+        disponible: copias > 0,
+        keywords: document.getElementById('form-keywords').value.trim(),
+        portada: document.getElementById('form-portada-url').value.trim(),
+        descripcion: document.getElementById('form-descripcion').value.trim()
+      };
+
+      await window.syncBook(data, id);
+      showToast("Libro guardado con éxito", "success");
+      closeModal('admin-book-modal');
+    }
+
+    async function deleteBookAdmin(id) {
+      if (confirm("¿Estás seguro de eliminar este libro?")) {
+        await window.removeBook(id);
+        showToast("Libro eliminado", "info");
+      }
+    }
+
+    // EXCEL BULK IMPORT
+    function handleExcelFile(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        try {
+          const data = new Uint8Array(evt.target.result);
+          const wb = XLSX.read(data, { type: 'array' });
+          const sheet = wb.Sheets[wb.SheetNames[0]];
+          const rows = XLSX.utils.sheet_to_json(sheet, { defval: "" });
+
+          if (rows.length === 0) {
+            showToast("El archivo está vacío", "error");
+            return;
+          }
+
+          const parsed = rows.map(r => {
+            const getV = (keys) => {
+              const kList = Object.keys(r);
+              for (const k of keys) {
+                const found = kList.find(x => x.toLowerCase().trim() === k.toLowerCase());
+                if (found && r[found] !== "") return r[found];
+              }
+              return null;
+            };
+
+            const copias = parseInt(getV(['copias', 'stock', 'cantidad']) || 1);
+
+            return {
+              titulo: getV(['titulo', 'libro', 'nombre']) || 'Sin Título',
+              autor: getV(['autor', 'escritor']) || 'Autor Desconocido',
+              editorial: getV(['editorial']) || 'CUNDECH',
+              genero: getV(['genero', 'género', 'categoria']) || 'General',
+              año: parseInt(getV(['año', 'ano', 'year'])) || 2024,
+              isbn: String(getV(['isbn', 'codigo']) || ''),
+              copias: copias,
+              disponible: copias > 0,
+              keywords: getV(['keywords', 'palabras clave']) || '',
+              descripcion: getV(['descripcion', 'resumen']) || 'Sin descripción.',
+              portada: getV(['portada', 'imagen', 'url']) || ''
+            };
+          });
+
+          window.appState.excelImportData = parsed;
+          document.getElementById('excel-row-count').textContent = parsed.length;
+          document.getElementById('excel-preview-area').classList.remove('hidden');
+        } catch(err) {
+          showToast("Error al leer archivo Excel", "error");
+        }
+      };
+      reader.readAsArrayBuffer(file);
+    }
+
+    function cancelExcelPreview() {
+      window.appState.excelImportData = [];
+      document.getElementById('excel-preview-area').classList.add('hidden');
+      document.getElementById('excel-file-input').value = '';
+    }
+
+    async function confirmExcelImport() {
+      const data = window.appState.excelImportData;
+      for (const item of data) {
+        await window.syncBook(item);
+      }
+      showToast(`${data.length} libros importados desde Excel`, "success");
+      cancelExcelPreview();
+    }
+
+    function downloadExcelTemplate() {
+      const sample = [
+        { "Título": "Derecho Constitucional Guatemalteco", "Autor": "Gerardo Prado", "Editorial": "Serviprensa", "Género": "Derecho", "Año": 2022, "Copias": 4, "ISBN": "978-99290011", "Palabras Clave": "derecho, constitucion", "Descripción": "Estudio analítico de las normas constitucionales de Guatemala.", "Portada": "" }
+      ];
+      const ws = XLSX.utils.json_to_sheet(sample);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Libros");
+      XLSX.writeFile(wb, "Plantilla_CUNDECH_Libros.xlsx");
+    }
+
+    // ADMIN USER MANAGEMENT CRUD
+    function renderAdminUserTable() {
+      const tbody = document.getElementById('admin-users-tbody');
+      if (!tbody) return;
+
+      tbody.innerHTML = window.appState.users.map(u => `
+        <tr class="hover:bg-slate-50">
+          <td class="p-3 sm:p-4 font-bold text-slate-800"><i class="fa-solid fa-user-gear mr-2 text-blue-600"></i>${u.username}</td>
+          <td class="p-3 sm:p-4 text-slate-600">${u.fullname}</td>
+          <td class="p-3 sm:p-4"><span class="bg-blue-100 text-blue-800 text-xs px-2.5 py-1 rounded-full font-bold whitespace-nowrap">Administrador</span></td>
+          <td class="p-3 sm:p-4 text-right whitespace-nowrap">
+            <button onclick="openUserModalForEdit('${u.username}')" class="p-1.5 text-slate-500 hover:text-blue-600"><i class="fa-solid fa-pen-to-square"></i></button>
+            ${window.appState.users.length > 1 ? `<button onclick="deleteAdminUser('${u.username}')" class="p-1.5 text-slate-500 hover:text-red-600"><i class="fa-solid fa-trash-can"></i></button>` : ''}
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function openUserModalForCreate() {
+      document.getElementById('admin-user-form-title').textContent = "Nuevo Administrador";
+      document.getElementById('form-user-old-username').value = '';
+      document.getElementById('user-form').reset();
+      document.getElementById('admin-user-modal').classList.remove('hidden');
+    }
+
+    function openUserModalForEdit(username) {
+      const u = window.appState.users.find(x => x.username === username);
+      if (!u) return;
+
+      document.getElementById('admin-user-form-title').textContent = "Editar Administrador";
+      document.getElementById('form-user-old-username').value = u.username;
+      document.getElementById('form-user-fullname').value = u.fullname;
+      document.getElementById('form-user-username').value = u.username;
+      document.getElementById('form-user-password').value = u.password;
+      document.getElementById('admin-user-modal').classList.remove('hidden');
+    }
+
+    function saveUserForm(e) {
+      e.preventDefault();
+      const oldU = document.getElementById('form-user-old-username').value;
+      const fn = document.getElementById('form-user-fullname').value.trim();
+      const un = document.getElementById('form-user-username').value.trim();
+      const pw = document.getElementById('form-user-password').value.trim();
+
+      if (oldU) {
+        const idx = window.appState.users.findIndex(x => x.username === oldU);
+        if (idx !== -1) window.appState.users[idx] = { username: un, fullname: fn, password: pw };
+      } else {
+        window.appState.users.push({ username: un, fullname: fn, password: pw });
+      }
+
+      saveLocalData();
+      renderAdminUserTable();
+      renderDashboards(window.appState.books);
+      showToast("Usuario administrador guardado", "success");
+      closeModal('admin-user-modal');
+    }
+
+    function deleteAdminUser(username) {
+      if (window.appState.users.length <= 1) {
+        showToast("No se puede eliminar el único administrador", "error");
+        return;
+      }
+      if (confirm(`¿Eliminar al usuario ${username}?`)) {
+        window.appState.users = window.appState.users.filter(x => x.username !== username);
+        saveLocalData();
+        renderAdminUserTable();
+        renderDashboards(window.appState.books);
+        showToast("Administrador eliminado", "info");
+      }
+    }
+
+    // GENERAL UTILITIES
+    function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+
+    function openDbModal() {
+      if (window.appState.firebaseConfig) {
+        document.getElementById('firebase-config-json').value = JSON.stringify(window.appState.firebaseConfig, null, 2);
+      }
+      document.getElementById('db-config-error').classList.add('hidden');
+      document.getElementById('db-modal').classList.remove('hidden');
+    }
+
+    function saveDbConfig() {
+      const errBox = document.getElementById('db-config-error');
+      errBox.classList.add('hidden');
+      let rawText = document.getElementById('firebase-config-json').value.trim();
+
+      if (!rawText) {
+        errBox.textContent = "Por favor ingresa o pega la configuración.";
+        errBox.classList.remove('hidden');
+        return;
+      }
+
+      try {
+        // Limpieza automática: Si pegan el código JS completo 'const firebaseConfig = { ... };'
+        if (rawText.includes('{') && rawText.includes('}')) {
+          rawText = rawText.substring(rawText.indexOf('{'), rawText.lastIndexOf('}') + 1);
+        }
+
+        // Convertir claves sin comillas como apiKey: a "apiKey":
+        let formattedJson = rawText
+          .replace(/([{,]\s*)([a-zA-Z0-9_$]+)\s*:/g, '$1"$2":')
+          .replace(/'/g, '"')
+          .replace(/,\s*([}\]])/g, '$1'); // Eliminar coma final si existe
+
+        const val = JSON.parse(formattedJson);
+        
+        if (!val.apiKey || !val.projectId) {
+          throw new Error("El objeto debe incluir al menos 'apiKey' y 'projectId'.");
+        }
+
+        localStorage.setItem('cundech_firebase_config', JSON.stringify(val));
+        showToast("Configuración guardada. Recargando...", "success");
+        setTimeout(() => location.reload(), 1000);
+      } catch(e) {
+        errBox.textContent = "Error al procesar el código: " + (e.message || "Asegúrate de que tenga el formato correcto.");
+        errBox.classList.remove('hidden');
+      }
+    }
+
+    function clearDbConfig() {
+      localStorage.removeItem('cundech_firebase_config');
+      showToast("Conexión remota eliminada", "info");
+      setTimeout(() => location.reload(), 1000);
+    }
+
+    function showToast(msg, type = 'success') {
+      const toast = document.getElementById('toast');
+      document.getElementById('toast-message').textContent = msg;
+      toast.classList.remove('translate-y-20', 'opacity-0');
+      toast.classList.add('translate-y-0', 'opacity-100');
+      setTimeout(() => {
+        toast.classList.remove('translate-y-0', 'opacity-100');
+        toast.classList.add('translate-y-20', 'opacity-0');
+      }, 3000);
+    }
+
+    // INIT
+    updateUI();
+  </script>
+</body>
+</html>
